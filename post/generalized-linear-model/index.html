@@ -1,0 +1,288 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+<meta name="description" content=""/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<title>Generalized Linear Model | Gridea</title>
+
+<link rel="shortcut icon" href="https://peiyujiang97.github.io/favicon.ico?v=1685552571418">
+
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://peiyujiang97.github.io/styles/main.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/dockerfile.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/dart.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.min.js"></script>
+<!-- DEMO JS -->
+<!--<script src="media/scripts/index.js"></script>-->
+
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.css">
+</head>
+<body>
+<div class="main gt-bg-theme-color-first">
+    <nav class="navbar navbar-expand-lg">
+    <div class="navbar-brand">
+        <img class="user-avatar" src="/images/avatar.png" alt="头像">
+        <div class="site-name gt-c-content-color-first">
+            Gridea
+        </div>
+    </div>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <i class="fas fa-bars gt-c-content-color-first" style="font-size: 18px"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="navbar-nav mr-auto" style="text-align: center">
+            
+                <div class="nav-item">
+                    
+                        <a href="/" class="menu gt-a-link">
+                            首页
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/archives" class="menu gt-a-link">
+                            归档
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/tags" class="menu gt-a-link">
+                            标签
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/post/about" class="menu gt-a-link">
+                            关于
+                        </a>
+                    
+                </div>
+            
+        </div>
+        <div style="text-align: center">
+            <form id="gridea-search-form" style="position: relative" data-update="1685552571418" action="/search/index.html">
+                <input class="search-input" autocomplete="off" spellcheck="false" name="q" placeholder="搜索文章" />
+                <i class="fas fa-search gt-c-content-color-first" style="position: absolute; top: 9px; left: 10px;"></i>
+            </form>
+        </div>
+    </div>
+</nav>
+
+    <div class="post-container">
+        <div class="post-detail gt-bg-theme-color-second">
+            <article class="gt-post-content">
+                <h2 class="post-title">
+                    Generalized Linear Model
+                </h2>
+                <div class="post-info">
+                    <time class="post-time gt-c-content-color-first">
+                        · 2022-11-08 ·
+                    </time>
+                    
+                </div>
+                <div class="post-content">
+                    <h1 id="introduction">Introduction</h1>
+<p>With the development of society, people's living standards are getting higher and higher. The pursuit of contemporary people is not just to solve the problem of food and clothing, but to pursue physical health. A formal assessment of the physical condition is complex and costly, so we consider the use of directly available data to assess an individual's physical condition.</p>
+<p>The purpose of this study is to predict the conditions of the body through some exercise performance data, such as height, weight, and blood pressure, as well as some basic exercise tests. Considering the complexity of the model, we straight descend the health status of individuals into two categories(A and B = Good, C and D = Bad). Since this report focus mainly on prediction,  predictive power of the model were used to compare different models.</p>
+<pre><code class="language-R">setwd(&quot;~/Desktop/GLM/Exam&quot;)
+GLM_exam &lt;- read.csv(&quot;bodyPerformance.csv&quot;, head = T)
+head(GLM_exam)
+summary(GLM_exam)
+
+
+# fixing missing values
+sum(is.na(GLM_exam))
+bope &lt;- na.omit(GLM_exam)
+
+
+
+#deleting 0 in data set
+for (i in 3:11){
+  bope_new &lt;- bope[bope[,i] != 0, ]
+  bope &lt;- bope_new
+}
+
+
+#fixing outliers using IQR
+summary(bope_new)
+boxplot(bope$height_cm)
+boxplot(bope$weight_kg)  
+boxplot(bope$body_fat)
+boxplot(bope$diastolic)
+boxplot(bope$systolic)
+boxplot(bope$gripForce)
+boxplot(bope$sit.and.bend.forward_cm)
+boxplot(bope$sit.ups.counts)
+boxplot(bope$broad.jump_cm)
+
+
+df &lt;- NULL
+for (i in 3:11){
+  df &lt;- subset(bope_new, bope_new[,i] &gt;= (quantile(bope_new[,i], 0.25) 
+                                        - 1.5 * IQR(bope_new[,i]))
+                       &amp; bope_new[,i] &lt;= (quantile(bope_new[,i], 0.75) 
+                                        + 1.5 * IQR(bope_new[,i])))
+  bope_new &lt;- df
+}
+
+# fixing response variable and gender
+df$y &lt;- ifelse(df$class == &quot;A&quot; | df$class == &quot;B&quot;, 1, 0)
+
+        #female = 1, male = 0
+df$gender_new &lt;- ifelse(df$gender == &quot;M&quot;, 1, 0)
+
+
+summary(df)
+table(df$y)
+
+######Modelling I
+#fit the model 
+logreg &lt;- glm(y ~ age + gender_new + height_cm + weight_kg + body_fat 
+              + diastolic + systolic + gripForce + sit.and.bend.forward_cm 
+              + sit.ups.counts + broad.jump_cm,
+              data = df,
+              family = binomial(link = &quot;logit&quot;))
+
+
+# evaluating the model fit
+summary(logreg)
+
+library(DHARMa)
+simulateResiduals(fittedModel = logreg, plot = T)
+
+library(caret)
+pred_prob &lt;- logreg$fitted.values
+pred_class &lt;- ifelse(pred_prob &gt;= 0.5, 1, 0)
+confusionMatrix(data = as.factor(pred_class),
+                reference = as.factor(df$y))
+
+library(pROC)
+roc(response = df$y,
+    predictor = pred_prob,
+    plot = T)
+
+
+#simplify the model 
+logreg_s &lt;- glm(y ~ age + gender_new + weight_kg
+              + diastolic + gripForce + sit.and.bend.forward_cm 
+              + sit.ups.counts + broad.jump_cm,
+              data = df,
+              family = binomial(link = &quot;logit&quot;))
+
+
+# evaluating the model fit
+summary(logreg_s)
+
+library(DHARMa)
+simulateResiduals(fittedModel = logreg_s, plot = T)
+
+library(caret)
+pred_prob_s &lt;- logreg_s$fitted.values
+pred_class_s &lt;- ifelse(pred_prob_s &gt;= 0.5, 1, 0)
+confusionMatrix(data = as.factor(pred_class_s),
+                reference = as.factor(df$y))
+
+library(pROC)
+roc(response = df$y,
+    predictor = pred_prob_s,
+    plot = T)
+
+######Modelling II
+library(mgcv)
+loggam &lt;- gam(y ~ age + gender_new + s(height_cm) + weight_kg + s(body_fat) 
+              + diastolic + s(systolic) + gripForce + sit.and.bend.forward_cm 
+              + sit.ups.counts + broad.jump_cm,
+              data = df,
+              family = binomial(link = &quot;logit&quot;))
+
+# evaluating the model fit
+summary(loggam)
+
+library(DHARMa)
+simulateResiduals(fittedModel = loggam, plot = T)
+
+library(caret)
+pred_prob_gam &lt;- loggam$fitted.values
+pred_class_gam &lt;- ifelse(pred_prob_gam &gt;= 0.5, 1, 0)
+confusionMatrix(data = as.factor(pred_class_gam),
+                reference = as.factor(df$y))
+
+library(pROC)
+roc(response = df$y,
+    predictor = pred_prob_gam,
+    plot = T)
+
+gam.check(loggam)
+
+</code></pre>
+
+                </div>
+            </article>
+        </div>
+
+        
+            <div class="next-post">
+                <div class="next gt-c-content-color-first">下一篇</div>
+                <a href="https://peiyujiang97.github.io/post/classifying-chinese-mnist/" class="post-title gt-a-link">
+                    Machine Learning - Classifying Chinese MNIST
+                </a>
+            </div>
+        
+
+        
+
+        
+
+        
+
+        <div class="site-footer gt-c-content-color-first">
+    <div class="slogan gt-c-content-color-first">温故而知新</div>
+    <div class="social-container">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    </div>
+    <div class="footer-info">
+        Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+    </div>
+    <div>
+        Theme by <a href="https://imhanjie.com/" target="_blank">imhanjie</a>, Powered by <a
+                href="https://github.com/getgridea/gridea" target="_blank">Gridea | <a href="https://peiyujiang97.github.io/atom.xml" target="_blank">RSS</a></a>
+    </div>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://peiyujiang97.github.io</id>
+    <title>Gridea</title>
+    <updated>2023-05-31T17:06:38.208Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://peiyujiang97.github.io"/>
+    <link rel="self" href="https://peiyujiang97.github.io/atom.xml"/>
+    <subtitle>温故而知新</subtitle>
+    <logo>https://peiyujiang97.github.io/images/avatar.png</logo>
+    <icon>https://peiyujiang97.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2023, Gridea</rights>
+    <entry>
+        <title type="html"><![CDATA[Generalized Linear Model]]></title>
+        <id>https://peiyujiang97.github.io/post/generalized-linear-model/</id>
+        <link href="https://peiyujiang97.github.io/post/generalized-linear-model/">
+        </link>
+        <updated>2022-11-08T05:03:39.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="introduction">Introduction</h1>
+<p>With the development of society, people's living standards are getting higher and higher. The pursuit of contemporary people is not just to solve the problem of food and clothing, but to pursue physical health. A formal assessment of the physical condition is complex and costly, so we consider the use of directly available data to assess an individual's physical condition.</p>
+<p>The purpose of this study is to predict the conditions of the body through some exercise performance data, such as height, weight, and blood pressure, as well as some basic exercise tests. Considering the complexity of the model, we straight descend the health status of individuals into two categories(A and B = Good, C and D = Bad). Since this report focus mainly on prediction,  predictive power of the model were used to compare different models.</p>
+<pre><code class="language-R">setwd(&quot;~/Desktop/GLM/Exam&quot;)
+GLM_exam &lt;- read.csv(&quot;bodyPerformance.csv&quot;, head = T)
+head(GLM_exam)
+summary(GLM_exam)
+
+
+# fixing missing values
+sum(is.na(GLM_exam))
+bope &lt;- na.omit(GLM_exam)
+
+
+
+#deleting 0 in data set
+for (i in 3:11){
+  bope_new &lt;- bope[bope[,i] != 0, ]
+  bope &lt;- bope_new
+}
+
+
+#fixing outliers using IQR
+summary(bope_new)
+boxplot(bope$height_cm)
+boxplot(bope$weight_kg)  
+boxplot(bope$body_fat)
+boxplot(bope$diastolic)
+boxplot(bope$systolic)
+boxplot(bope$gripForce)
+boxplot(bope$sit.and.bend.forward_cm)
+boxplot(bope$sit.ups.counts)
+boxplot(bope$broad.jump_cm)
+
+
+df &lt;- NULL
+for (i in 3:11){
+  df &lt;- subset(bope_new, bope_new[,i] &gt;= (quantile(bope_new[,i], 0.25) 
+                                        - 1.5 * IQR(bope_new[,i]))
+                       &amp; bope_new[,i] &lt;= (quantile(bope_new[,i], 0.75) 
+                                        + 1.5 * IQR(bope_new[,i])))
+  bope_new &lt;- df
+}
+
+# fixing response variable and gender
+df$y &lt;- ifelse(df$class == &quot;A&quot; | df$class == &quot;B&quot;, 1, 0)
+
+        #female = 1, male = 0
+df$gender_new &lt;- ifelse(df$gender == &quot;M&quot;, 1, 0)
+
+
+summary(df)
+table(df$y)
+
+######Modelling I
+#fit the model 
+logreg &lt;- glm(y ~ age + gender_new + height_cm + weight_kg + body_fat 
+              + diastolic + systolic + gripForce + sit.and.bend.forward_cm 
+              + sit.ups.counts + broad.jump_cm,
+              data = df,
+              family = binomial(link = &quot;logit&quot;))
+
+
+# evaluating the model fit
+summary(logreg)
+
+library(DHARMa)
+simulateResiduals(fittedModel = logreg, plot = T)
+
+library(caret)
+pred_prob &lt;- logreg$fitted.values
+pred_class &lt;- ifelse(pred_prob &gt;= 0.5, 1, 0)
+confusionMatrix(data = as.factor(pred_class),
+                reference = as.factor(df$y))
+
+library(pROC)
+roc(response = df$y,
+    predictor = pred_prob,
+    plot = T)
+
+
+#simplify the model 
+logreg_s &lt;- glm(y ~ age + gender_new + weight_kg
+              + diastolic + gripForce + sit.and.bend.forward_cm 
+              + sit.ups.counts + broad.jump_cm,
+              data = df,
+              family = binomial(link = &quot;logit&quot;))
+
+
+# evaluating the model fit
+summary(logreg_s)
+
+library(DHARMa)
+simulateResiduals(fittedModel = logreg_s, plot = T)
+
+library(caret)
+pred_prob_s &lt;- logreg_s$fitted.values
+pred_class_s &lt;- ifelse(pred_prob_s &gt;= 0.5, 1, 0)
+confusionMatrix(data = as.factor(pred_class_s),
+                reference = as.factor(df$y))
+
+library(pROC)
+roc(response = df$y,
+    predictor = pred_prob_s,
+    plot = T)
+
+######Modelling II
+library(mgcv)
+loggam &lt;- gam(y ~ age + gender_new + s(height_cm) + weight_kg + s(body_fat) 
+              + diastolic + s(systolic) + gripForce + sit.and.bend.forward_cm 
+              + sit.ups.counts + broad.jump_cm,
+              data = df,
+              family = binomial(link = &quot;logit&quot;))
+
+# evaluating the model fit
+summary(loggam)
+
+library(DHARMa)
+simulateResiduals(fittedModel = loggam, plot = T)
+
+library(caret)
+pred_prob_gam &lt;- loggam$fitted.values
+pred_class_gam &lt;- ifelse(pred_prob_gam &gt;= 0.5, 1, 0)
+confusionMatrix(data = as.factor(pred_class_gam),
+                reference = as.factor(df$y))
+
+library(pROC)
+roc(response = df$y,
+    predictor = pred_prob_gam,
+    plot = T)
+
+gam.check(loggam)
+
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Machine Learning - Classifying Chinese MNIST]]></title>
+        <id>https://peiyujiang97.github.io/post/classifying-chinese-mnist/</id>
+        <link href="https://peiyujiang97.github.io/post/classifying-chinese-mnist/">
+        </link>
+        <updated>2022-11-06T17:11:39.000Z</updated>
+        <content type="html"><![CDATA[<p>In this project, the aim is to comparing the influence of the optimization algorithms of a multilayer the influence of the optimization algorithms of multilayers neutral network to the classification of the Chinese number character.</p>
+<figure data-type="image" tabindex="1"><img src="https://peiyujiang97.github.io/post-images/1667934020408.png" alt="" loading="lazy"></figure>
+<p>Stochastic Gradient Descent (SGD), ADAM,the influence of the optimization algorithms of multilayers neutral network to the classification of the Chinese number character. Stochastic Gradient Descent (SGD), ADAM, and RMSprop were chosen to be compared by the loss, validation loss, accuracy, validation accuracy,he influence of the optimization algorithms of multilayers neutral network on the classification of the Chinese number character. Stochastic Gradient Descent (SGD), ADAM,influence of the optimization algorithms of multilayers neutral network to the classification of the Chinese number character. Stochastic Gradient Descent (SGD), ADAM and RMSprop were chosen to be compared by the loss, validation loss, accuracy, validation accuracy and using time. After tuning the hyperparameters, Adam with 0.001 learning rate, 4 hidden layers(512, 256, 128, 64), 128 batch size, 20 epochs, 0.4, 0.3, 0.2, 0.2 drop out rate is the beat model for the training set, which the accuracy is 0.9796 and the time is 50.15s. At test part Adam also gives the best accuracy(0.829).</p>
+<pre><code class="language-R">setwd(&quot;x:/Desktop/peiyu/R&quot;)
+library(keras)
+library(tidyverse)
+load(&quot;chinese_mnistv2.RData&quot;)
+
+#SGD
+#training
+modelnn &lt;- keras_model_sequential()
+modelnn %&gt;%
+  layer_dense(units = 512, activation = &quot;relu&quot;,
+              input_shape = c(4096)) %&gt;%
+  layer_dropout(rate = 0.3) %&gt;%
+  layer_dense(units = 256, activation = &quot;relu&quot;) %&gt;%
+  layer_dropout(rate = 0.3) %&gt;%
+  layer_dense(units = 10, activation = &quot;softmax&quot;)
+
+modelnn %&gt;%
+  compile(loss = &quot;categorical_crossentropy&quot;,
+          optimizer = optimizer_sgd(),
+          metrics = c(&quot;accuracy&quot;))
+
+system.time(
+  history &lt;- modelnn %&gt;%
+    fit(mnist_train , y_train_c, 
+        epochs = 20, batch_size = 1,
+        validation_split = 0.2))
+plot(history , smooth = FALSE)
+
+#test
+modelnn %&gt;% evaluate(mnist_test, y_test_c,verbose = 0)
+
+##RMSProp
+#training
+modelnn &lt;- keras_model_sequential()
+modelnn %&gt;%
+  layer_dense(units = 128, activation = &quot;relu&quot;,
+              input_shape = c(4096)) %&gt;%
+  layer_dropout(rate = 0.2) %&gt;%
+  layer_dense(units = 64, activation = &quot;relu&quot;) %&gt;%
+  layer_dropout(rate = 0.2) %&gt;%
+  layer_dense(units = 10, activation = &quot;softmax&quot;)
+
+
+modelnn %&gt;%
+  compile(loss = &quot;categorical_crossentropy&quot;,
+          optimizer = optimizer_rmsprop(learning_rate = 0.001),
+          metrics = c(&quot;accuracy&quot;))
+
+system.time(
+  history &lt;- modelnn %&gt;%
+    fit(mnist_train , y_train_c, 
+        epochs = 20, batch_size = 128,
+        validation_split = 0.2)
+)
+plot(history , smooth = FALSE)
+
+#test
+modelnn %&gt;% evaluate(mnist_test, y_test_c,verbose = 0)
+
+
+##Adam
+#training
+modelnn &lt;- keras_model_sequential()
+modelnn %&gt;%
+  layer_dense(units = 512, activation = &quot;relu&quot;,
+              input_shape = c(4096)) %&gt;%
+  layer_dropout(rate = 0.4) %&gt;%
+  layer_dense(units = 256, activation = &quot;relu&quot;) %&gt;%
+  layer_dropout(rate = 0.3) %&gt;%
+  layer_dense(units = 128, activation = &quot;relu&quot;) %&gt;%
+  layer_dropout(rate = 0.2) %&gt;%
+  layer_dense(units = 64, activation = &quot;relu&quot;) %&gt;%
+  layer_dropout(rate = 0.2) %&gt;%
+  layer_dense(units = 10, activation = &quot;softmax&quot;)
+
+modelnn %&gt;%
+  compile(loss = &quot;categorical_crossentropy&quot;,
+          optimizer = optimizer_adam(learning_rate = 0.001),
+          metrics = c(&quot;accuracy&quot;))
+
+system.time(
+  history &lt;- modelnn %&gt;%
+    fit(mnist_train , y_train_c, 
+        epochs = 20, batch_size = 128,
+        validation_split = 0.2)
+)
+plot(history , smooth = FALSE)
+
+#test
+modelnn %&gt;% evaluate(mnist_test, y_test_c,verbose = 0)
+
+##Comparison of training set
+
+xx &lt;- rep(c(&quot;Loss&quot;, &quot;Val_loss&quot;, &quot;Accuracy&quot;,&quot;Val_accuracy&quot;), each = 3)
+x &lt;- factor(xx, level = c(&quot;Loss&quot;, &quot;Val_loss&quot;, &quot;Accuracy&quot;,&quot;Val_accuracy&quot;))
+yy &lt;- rep(c('SGD','RMSProp','Adam'),times = 4)
+y &lt;- factor(yy, level = c('SGD','RMSProp','Adam'))
+z &lt;- c(0.02806 , 0.1207 ,0.06575 , 0.8975 , 0.743 , 0.8022 ,
+       0.9914, 0.9619 ,0.9796 ,  0.8239, 0.8006 , 0.8317)
+comp &lt;- data.frame(x = x, y = y, z = z)
+ggplot(data = comp, mapping = aes(x = x, y = z, fill = y)) + 
+  geom_bar(stat = 'identity', position = 'dodge') +
+  labs(x = &quot;measure&quot;, y =&quot;value&quot;)
+</code></pre>
+]]></content>
+    </entry>
+</feed>

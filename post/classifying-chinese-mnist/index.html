@@ -1,0 +1,270 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+<meta name="description" content=""/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<title>Machine Learning - Classifying Chinese MNIST | Gridea</title>
+
+<link rel="shortcut icon" href="https://peiyujiang97.github.io/favicon.ico?v=1685552571418">
+
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://peiyujiang97.github.io/styles/main.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/dockerfile.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/dart.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.min.js"></script>
+<!-- DEMO JS -->
+<!--<script src="media/scripts/index.js"></script>-->
+
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.css">
+</head>
+<body>
+<div class="main gt-bg-theme-color-first">
+    <nav class="navbar navbar-expand-lg">
+    <div class="navbar-brand">
+        <img class="user-avatar" src="/images/avatar.png" alt="头像">
+        <div class="site-name gt-c-content-color-first">
+            Gridea
+        </div>
+    </div>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <i class="fas fa-bars gt-c-content-color-first" style="font-size: 18px"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="navbar-nav mr-auto" style="text-align: center">
+            
+                <div class="nav-item">
+                    
+                        <a href="/" class="menu gt-a-link">
+                            首页
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/archives" class="menu gt-a-link">
+                            归档
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/tags" class="menu gt-a-link">
+                            标签
+                        </a>
+                    
+                </div>
+            
+                <div class="nav-item">
+                    
+                        <a href="/post/about" class="menu gt-a-link">
+                            关于
+                        </a>
+                    
+                </div>
+            
+        </div>
+        <div style="text-align: center">
+            <form id="gridea-search-form" style="position: relative" data-update="1685552571418" action="/search/index.html">
+                <input class="search-input" autocomplete="off" spellcheck="false" name="q" placeholder="搜索文章" />
+                <i class="fas fa-search gt-c-content-color-first" style="position: absolute; top: 9px; left: 10px;"></i>
+            </form>
+        </div>
+    </div>
+</nav>
+
+    <div class="post-container">
+        <div class="post-detail gt-bg-theme-color-second">
+            <article class="gt-post-content">
+                <h2 class="post-title">
+                    Machine Learning - Classifying Chinese MNIST
+                </h2>
+                <div class="post-info">
+                    <time class="post-time gt-c-content-color-first">
+                        · 2022-11-06 ·
+                    </time>
+                    
+                        <a href="https://peiyujiang97.github.io/tag/exHtKscWN/" class="post-tags">
+                            # Code
+                        </a>
+                    
+                        <a href="https://peiyujiang97.github.io/tag/kHnPdPwhPc/" class="post-tags">
+                            # Machine Learning
+                        </a>
+                    
+                        <a href="https://peiyujiang97.github.io/tag/qsEupoVY_2/" class="post-tags">
+                            # MNIST
+                        </a>
+                    
+                        <a href="https://peiyujiang97.github.io/tag/MJWMjkw3ve/" class="post-tags">
+                            # Classification
+                        </a>
+                    
+                </div>
+                <div class="post-content">
+                    <p>In this project, the aim is to comparing the influence of the optimization algorithms of a multilayer the influence of the optimization algorithms of multilayers neutral network to the classification of the Chinese number character.</p>
+<figure data-type="image" tabindex="1"><img src="https://peiyujiang97.github.io/post-images/1667934020408.png" alt="" loading="lazy"></figure>
+<p>Stochastic Gradient Descent (SGD), ADAM,the influence of the optimization algorithms of multilayers neutral network to the classification of the Chinese number character. Stochastic Gradient Descent (SGD), ADAM, and RMSprop were chosen to be compared by the loss, validation loss, accuracy, validation accuracy,he influence of the optimization algorithms of multilayers neutral network on the classification of the Chinese number character. Stochastic Gradient Descent (SGD), ADAM,influence of the optimization algorithms of multilayers neutral network to the classification of the Chinese number character. Stochastic Gradient Descent (SGD), ADAM and RMSprop were chosen to be compared by the loss, validation loss, accuracy, validation accuracy and using time. After tuning the hyperparameters, Adam with 0.001 learning rate, 4 hidden layers(512, 256, 128, 64), 128 batch size, 20 epochs, 0.4, 0.3, 0.2, 0.2 drop out rate is the beat model for the training set, which the accuracy is 0.9796 and the time is 50.15s. At test part Adam also gives the best accuracy(0.829).</p>
+<pre><code class="language-R">setwd(&quot;x:/Desktop/peiyu/R&quot;)
+library(keras)
+library(tidyverse)
+load(&quot;chinese_mnistv2.RData&quot;)
+
+#SGD
+#training
+modelnn &lt;- keras_model_sequential()
+modelnn %&gt;%
+  layer_dense(units = 512, activation = &quot;relu&quot;,
+              input_shape = c(4096)) %&gt;%
+  layer_dropout(rate = 0.3) %&gt;%
+  layer_dense(units = 256, activation = &quot;relu&quot;) %&gt;%
+  layer_dropout(rate = 0.3) %&gt;%
+  layer_dense(units = 10, activation = &quot;softmax&quot;)
+
+modelnn %&gt;%
+  compile(loss = &quot;categorical_crossentropy&quot;,
+          optimizer = optimizer_sgd(),
+          metrics = c(&quot;accuracy&quot;))
+
+system.time(
+  history &lt;- modelnn %&gt;%
+    fit(mnist_train , y_train_c, 
+        epochs = 20, batch_size = 1,
+        validation_split = 0.2))
+plot(history , smooth = FALSE)
+
+#test
+modelnn %&gt;% evaluate(mnist_test, y_test_c,verbose = 0)
+
+##RMSProp
+#training
+modelnn &lt;- keras_model_sequential()
+modelnn %&gt;%
+  layer_dense(units = 128, activation = &quot;relu&quot;,
+              input_shape = c(4096)) %&gt;%
+  layer_dropout(rate = 0.2) %&gt;%
+  layer_dense(units = 64, activation = &quot;relu&quot;) %&gt;%
+  layer_dropout(rate = 0.2) %&gt;%
+  layer_dense(units = 10, activation = &quot;softmax&quot;)
+
+
+modelnn %&gt;%
+  compile(loss = &quot;categorical_crossentropy&quot;,
+          optimizer = optimizer_rmsprop(learning_rate = 0.001),
+          metrics = c(&quot;accuracy&quot;))
+
+system.time(
+  history &lt;- modelnn %&gt;%
+    fit(mnist_train , y_train_c, 
+        epochs = 20, batch_size = 128,
+        validation_split = 0.2)
+)
+plot(history , smooth = FALSE)
+
+#test
+modelnn %&gt;% evaluate(mnist_test, y_test_c,verbose = 0)
+
+
+##Adam
+#training
+modelnn &lt;- keras_model_sequential()
+modelnn %&gt;%
+  layer_dense(units = 512, activation = &quot;relu&quot;,
+              input_shape = c(4096)) %&gt;%
+  layer_dropout(rate = 0.4) %&gt;%
+  layer_dense(units = 256, activation = &quot;relu&quot;) %&gt;%
+  layer_dropout(rate = 0.3) %&gt;%
+  layer_dense(units = 128, activation = &quot;relu&quot;) %&gt;%
+  layer_dropout(rate = 0.2) %&gt;%
+  layer_dense(units = 64, activation = &quot;relu&quot;) %&gt;%
+  layer_dropout(rate = 0.2) %&gt;%
+  layer_dense(units = 10, activation = &quot;softmax&quot;)
+
+modelnn %&gt;%
+  compile(loss = &quot;categorical_crossentropy&quot;,
+          optimizer = optimizer_adam(learning_rate = 0.001),
+          metrics = c(&quot;accuracy&quot;))
+
+system.time(
+  history &lt;- modelnn %&gt;%
+    fit(mnist_train , y_train_c, 
+        epochs = 20, batch_size = 128,
+        validation_split = 0.2)
+)
+plot(history , smooth = FALSE)
+
+#test
+modelnn %&gt;% evaluate(mnist_test, y_test_c,verbose = 0)
+
+##Comparison of training set
+
+xx &lt;- rep(c(&quot;Loss&quot;, &quot;Val_loss&quot;, &quot;Accuracy&quot;,&quot;Val_accuracy&quot;), each = 3)
+x &lt;- factor(xx, level = c(&quot;Loss&quot;, &quot;Val_loss&quot;, &quot;Accuracy&quot;,&quot;Val_accuracy&quot;))
+yy &lt;- rep(c('SGD','RMSProp','Adam'),times = 4)
+y &lt;- factor(yy, level = c('SGD','RMSProp','Adam'))
+z &lt;- c(0.02806 , 0.1207 ,0.06575 , 0.8975 , 0.743 , 0.8022 ,
+       0.9914, 0.9619 ,0.9796 ,  0.8239, 0.8006 , 0.8317)
+comp &lt;- data.frame(x = x, y = y, z = z)
+ggplot(data = comp, mapping = aes(x = x, y = z, fill = y)) + 
+  geom_bar(stat = 'identity', position = 'dodge') +
+  labs(x = &quot;measure&quot;, y =&quot;value&quot;)
+</code></pre>
+
+                </div>
+            </article>
+        </div>
+
+        
+
+        
+
+        
+
+        
+
+        <div class="site-footer gt-c-content-color-first">
+    <div class="slogan gt-c-content-color-first">温故而知新</div>
+    <div class="social-container">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    </div>
+    <div class="footer-info">
+        Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+    </div>
+    <div>
+        Theme by <a href="https://imhanjie.com/" target="_blank">imhanjie</a>, Powered by <a
+                href="https://github.com/getgridea/gridea" target="_blank">Gridea | <a href="https://peiyujiang97.github.io/atom.xml" target="_blank">RSS</a></a>
+    </div>
+</div>
+
+<script>
+  hljs.initHighlightingOnLoad()
+</script>
+
+    </div>
+</div>
+</body>
+</html>
